@@ -1,0 +1,19 @@
+{
+  "name": "gr8r-rev_ai-worker",
+  "main": "index.js",
+  "compatibility_date": "2025-06-17",
+
+  // Production environment config
+  "env": {
+    "production": {
+      "services": [
+        {
+          "binding": "GRAFANA",
+          "service": "gr8r-grafana-worker",
+          "environment": "production",
+          "entrypoint": "default"
+        }
+      ]
+    }
+  }
+}
