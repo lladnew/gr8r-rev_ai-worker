@@ -1,0 +1,7 @@
+name = "gr8r-revai-worker"
+main = "index.js"
+compatibility_date = "2025-06-17"
+
+[[services]]
+binding = "GRAFANA"
+service = "gr8r-grafana-worker"
