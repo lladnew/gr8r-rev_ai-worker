@@ -3,17 +3,11 @@
   "main": "index.js",
   "compatibility_date": "2025-06-17",
 
-  // Production environment config
-  "env": {
-    "production": {
-      "services": [
-        {
-          "binding": "GRAFANA",
-          "service": "gr8r-grafana-worker",
-          "environment": "production",
-          "entrypoint": "default"
-        }
-      ]
+  "services": [
+    {
+      "binding": "GRAFANA",
+      "service": "gr8r-grafana-worker",
+      "entrypoint": "default"
     }
-  }
+  ]
 }
