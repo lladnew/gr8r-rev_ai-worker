@@ -1,9 +1,9 @@
-// v1.0.1 gr8r-rev_ai-worker
+// v1.0.1 gr8r-revai-worker
 // - ADDED: Grafana logging for success and error cases
 // - LOGS: request metadata, response status, and full error object if applicable
 // - PRESERVED: hardcoded custom_vocabulary_id (tagged with TODO for future flexibility)
 
-// v1.0.0 gr8r-rev_ai-worker
+// v1.0.0 gr8r-revai-worker
 // - INITIAL RELEASE: triggers Rev.ai transcription job via POST
 // - Uses hardcoded custom_vocabulary_id for now (may need updating later)
 
@@ -30,7 +30,7 @@ export default {
         const revResponse = await fetch("https://api.rev.ai/speechtotext/v1/jobs", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${env.REV_AI_API_KEY}`,
+            "Authorization": `Bearer ${env.REVAI_API_KEY}`,
             "Content-Type": "application/json"
           },
           body: JSON.stringify(revPayload)
@@ -49,7 +49,7 @@ export default {
               ? "Rev.ai transcription job started"
               : `Rev.ai error: ${resultText}`,
             meta: {
-              source: "gr8r-rev_ai-worker",
+              source: "gr8r-revai-worker",
               service: "transcribe",
               media_url,
               metadata,
@@ -74,7 +74,7 @@ export default {
             level: "error",
             message: "Unhandled Rev.ai job error",
             meta: {
-              source: "gr8r-rev_ai-worker",
+              source: "gr8r-revai-worker",
               service: "transcribe",
               error: err.message,
               stack: err.stack
