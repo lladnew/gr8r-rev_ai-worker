@@ -1,8 +1,10 @@
+// v1.0.2 gr8r-revai-worker
+// - FIXED: Converts metadata to JSON string before sending to Rev.ai (required format)
+// - PRESERVED: Logging of request metadata and Rev.ai response to Grafana
+// - RETAINED: hardcoded custom_vocabulary_id with TODO tag for future config
 // v1.0.1 gr8r-revai-worker
 // - ADDED: Grafana logging for success and error cases
 // - LOGS: request metadata, response status, and full error object if applicable
-// - PRESERVED: hardcoded custom_vocabulary_id (tagged with TODO for future flexibility)
-
 // v1.0.0 gr8r-revai-worker
 // - INITIAL RELEASE: triggers Rev.ai transcription job via POST
 // - Uses hardcoded custom_vocabulary_id for now (may need updating later)
@@ -22,7 +24,7 @@ export default {
 
         const revPayload = {
           media_url,
-          metadata,
+          metadata: JSON.stringify(metadata), // ✅ Ensure metadata is string
           callback_url,
           custom_vocabulary_id: "cvyeFz2ApdhD4nVfoW" // TODO: Make this configurable
         };
