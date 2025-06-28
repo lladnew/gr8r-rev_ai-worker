@@ -1,13 +1,13 @@
+// v1.0.3 gr8r-revai-worker
+// - ADDED: `name` field set to `metadata.title` for cleaner display in Rev.ai dashboard
+// - RETAINED: JSON.stringify of full metadata for automation compatibility
+// - PRESERVED: Grafana logging for both success and error cases
 // v1.0.2 gr8r-revai-worker
 // - FIXED: Converts metadata to JSON string before sending to Rev.ai (required format)
-// - PRESERVED: Logging of request metadata and Rev.ai response to Grafana
-// - RETAINED: hardcoded custom_vocabulary_id with TODO tag for future config
 // v1.0.1 gr8r-revai-worker
 // - ADDED: Grafana logging for success and error cases
-// - LOGS: request metadata, response status, and full error object if applicable
 // v1.0.0 gr8r-revai-worker
-// - INITIAL RELEASE: triggers Rev.ai transcription job via POST
-// - Uses hardcoded custom_vocabulary_id for now (may need updating later)
+// - INITIAL RELEASE
 
 export default {
   async fetch(request, env, ctx) {
@@ -24,9 +24,10 @@ export default {
 
         const revPayload = {
           media_url,
-          metadata: JSON.stringify(metadata), // ✅ Ensure metadata is string
+          metadata: JSON.stringify(metadata),
+          name: metadata.title || "Untitled", // ✅ clean job name for Rev.ai dashboard
           callback_url,
-          custom_vocabulary_id: "cvyeFz2ApdhD4nVfoW" // TODO: Make this configurable
+          custom_vocabulary_id: "cvyeFz2ApdhD4nVfoW" // TODO: make configurable
         };
 
         const revResponse = await fetch("https://api.rev.ai/speechtotext/v1/jobs", {
@@ -94,3 +95,4 @@ export default {
     return new Response("Not found", { status: 404 });
   }
 };
+
