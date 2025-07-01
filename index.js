@@ -1,3 +1,8 @@
+// v1.0.6 gr8r-revai-worker
+// CHANGED: fetch-transcript endpoint now accepts { job_id } instead of { transcript_url } (v1.0.6)
+// - FETCHES: transcript via Rev.ai API GET /jobs/{job_id}/transcript (v1.0.6)
+// - RETAINED: error handling and Grafana logging (v1.0.6)
+//
 // v1.0.5 gr8r-revai-worker
 // - ADDED: POST /api/revai/fetch-transcript endpoint to retrieve transcript from Rev.ai with API key (v1.0.5)
 // - PRESERVED: existing /transcribe job creation logic unchanged (v1.0.5)
@@ -106,13 +111,13 @@ export default {
     // === Transcript Retrieval ===
     if (url.pathname === "/api/revai/fetch-transcript" && request.method === "POST") {
       try {
-        const { transcript_url } = await request.json();
+        const { job_id } = await request.json();
 
-        if (!transcript_url) {
-          return new Response("Missing transcript_url", { status: 400 });
+        if (!job_id) {
+          return new Response("Missing job_id", { status: 400 });
         }
 
-        const revFetch = await fetch(transcript_url, {
+        const revFetch = await fetch(`https://api.rev.ai/speechtotext/v1/jobs/${job_id}/transcript`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${env.REVAI_API_KEY}`,
@@ -157,4 +162,3 @@ export default {
     return new Response("Not found", { status: 404 });
   }
 };
-
