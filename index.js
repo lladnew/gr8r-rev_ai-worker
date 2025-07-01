@@ -1,8 +1,4 @@
-// v1.0.7 gr8r-revai-worker
-// - FIXED: `/fetch-transcript` now returns `{ transcript: ... }` JSON instead of plain text (v1.0.7)
-// - REQUIRED: to prevent JSON parse errors in gr8r-revai-callback-worker (v1.0.7)
-// - RETAINED: logging, error handling, and Rev.ai API call structure (v1.0.7)
-// v1.0.6 gr8r-revai-worker
+// v1.0.6 gr8r-revai-worker (roll back)
 // CHANGED: fetch-transcript endpoint now accepts { job_id } instead of { transcript_url } (v1.0.6)
 // - FETCHES: transcript via Rev.ai API GET /jobs/{job_id}/transcript (v1.0.6)
 // - RETAINED: error handling and Grafana logging (v1.0.6)
@@ -135,10 +131,10 @@ export default {
           throw new Error(`Transcript fetch failed: ${revFetch.status}`);
         }
 
-return new Response(JSON.stringify({ transcript: transcriptText }), {
-  status: 200,
-  headers: { "Content-Type": "application/json" }
-});
+        return new Response(transcriptText, {
+          status: 200,
+          headers: { "Content-Type": "text/plain" }
+        });
 
       } catch (err) {
         await env.GRAFANA.fetch("https://internal/api/grafana", {
