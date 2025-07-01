@@ -1,8 +1,14 @@
+// v1.0.5 gr8r-revai-worker
+// - ADDED: POST /api/revai/fetch-transcript endpoint to retrieve transcript from Rev.ai with API key (v1.0.5)
+// - PRESERVED: existing /transcribe job creation logic unchanged (v1.0.5)
+// - PRESERVED: Grafana logging and clean Rev.ai dashboard metadata (v1.0.5)
+//
 // v1.0.4 gr8r-revai-worker
 // - CHANGED: Now returns full parsed Rev.ai job object (not just text)
 // - CHANGED: Sends metadata as plain title string instead of full JSON
 // - RETAINED: Clean job name in Rev.ai dashboard
 // - PRESERVED: Grafana logging and error capture
+//
 // v1.0.3 gr8r-revai-worker
 // - ADDED: `name` field set to `metadata.title` for cleaner display in Rev.ai dashboard
 
@@ -10,6 +16,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    // === Transcription Job Creation ===
     if (url.pathname === "/api/revai/transcribe" && request.method === "POST") {
       try {
         const body = await request.json();
@@ -23,8 +30,8 @@ export default {
 
         const revPayload = {
           media_url,
-          metadata: title, // ✅ simplified metadata string
-          name: title,      // ✅ clean UI in Rev.ai
+          metadata: title,
+          name: title,
           callback_url,
           custom_vocabulary_id: "cvyeFz2ApdhD4nVfoW"
         };
@@ -45,12 +52,10 @@ export default {
         try {
           resultJson = JSON.parse(resultText);
         } catch (e) {
-          // fallback in case of unexpected non-JSON error body
           resultJson = { raw: resultText };
         }
 
-        // Log to Grafana
-        await env.GRAFANA.fetch(new Request('https://internal/api/grafana', {
+        await env.GRAFANA.fetch("https://internal/api/grafana", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -68,7 +73,7 @@ export default {
               ...(success ? {} : { revResponse: resultText })
             }
           })
-        }));
+        });
 
         return new Response(JSON.stringify(resultJson), {
           status: revResponse.status,
@@ -76,7 +81,7 @@ export default {
         });
 
       } catch (err) {
-        await env.GRAFANA.fetch(new Request('https://internal/api/grafana', {
+        await env.GRAFANA.fetch("https://internal/api/grafana", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -89,7 +94,7 @@ export default {
               stack: err.stack
             }
           })
-        }));
+        });
 
         return new Response(JSON.stringify({
           error: "Internal error",
@@ -98,6 +103,58 @@ export default {
       }
     }
 
+    // === Transcript Retrieval ===
+    if (url.pathname === "/api/revai/fetch-transcript" && request.method === "POST") {
+      try {
+        const { transcript_url } = await request.json();
+
+        if (!transcript_url) {
+          return new Response("Missing transcript_url", { status: 400 });
+        }
+
+        const revFetch = await fetch(transcript_url, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${env.REVAI_API_KEY}`,
+            Accept: "text/plain"
+          }
+        });
+
+        const transcriptText = await revFetch.text();
+
+        if (!revFetch.ok) {
+          throw new Error(`Transcript fetch failed: ${revFetch.status}`);
+        }
+
+        return new Response(transcriptText, {
+          status: 200,
+          headers: { "Content-Type": "text/plain" }
+        });
+
+      } catch (err) {
+        await env.GRAFANA.fetch("https://internal/api/grafana", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            level: "error",
+            message: "Transcript fetch failure",
+            meta: {
+              source: "gr8r-revai-worker",
+              service: "fetch-transcript",
+              error: err.message,
+              stack: err.stack
+            }
+          })
+        });
+
+        return new Response(JSON.stringify({
+          error: "Transcript fetch failed",
+          message: err.message
+        }), { status: 500, headers: { "Content-Type": "application/json" } });
+      }
+    }
+
     return new Response("Not found", { status: 404 });
   }
 };
+
