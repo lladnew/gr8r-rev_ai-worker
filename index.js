@@ -1,19 +1,20 @@
+// v1.0.7 gr8r-revai-worker
+// - ADDED: debug-level logging of transcript fetch response to console and Grafana (v1.0.7)
+// - INSERTED: console.log and transcript snippet log after successful fetch in /fetch-transcript (v1.0.7)
+// - RETAINED: existing error handling, response structure, and logging format (v1.0.7)
 // v1.0.6 gr8r-revai-worker (roll back)
 // CHANGED: fetch-transcript endpoint now accepts { job_id } instead of { transcript_url } (v1.0.6)
 // - FETCHES: transcript via Rev.ai API GET /jobs/{job_id}/transcript (v1.0.6)
 // - RETAINED: error handling and Grafana logging (v1.0.6)
-//
 // v1.0.5 gr8r-revai-worker
 // - ADDED: POST /api/revai/fetch-transcript endpoint to retrieve transcript from Rev.ai with API key (v1.0.5)
 // - PRESERVED: existing /transcribe job creation logic unchanged (v1.0.5)
 // - PRESERVED: Grafana logging and clean Rev.ai dashboard metadata (v1.0.5)
-//
 // v1.0.4 gr8r-revai-worker
 // - CHANGED: Now returns full parsed Rev.ai job object (not just text)
 // - CHANGED: Sends metadata as plain title string instead of full JSON
 // - RETAINED: Clean job name in Rev.ai dashboard
 // - PRESERVED: Grafana logging and error capture
-//
 // v1.0.3 gr8r-revai-worker
 // - ADDED: `name` field set to `metadata.title` for cleaner display in Rev.ai dashboard
 
@@ -126,6 +127,22 @@ export default {
         });
 
         const transcriptText = await revFetch.text();
+//new logging block inserted v1.0.7        
+console.log('[revai-worker] Fetched transcript:', transcriptText);
+await env.GRAFANA.fetch("https://internal/api/grafana", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    level: "debug",
+    message: "Transcript fetch result",
+    meta: {
+      source: "gr8r-revai-worker",
+      service: "fetch-transcript",
+      fetch_status: revFetch.status,
+      snippet: transcriptText.slice(0, 100)
+    }
+  })
+});
 
         if (!revFetch.ok) {
           throw new Error(`Transcript fetch failed: ${revFetch.status}`);
