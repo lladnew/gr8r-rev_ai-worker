@@ -1,3 +1,5 @@
+// v1.0.8 gr8r-revai-worker
+// - ADDED: "strict" custom vocab enforcement line:46
 // v1.0.7 gr8r-revai-worker
 // - ADDED: debug-level logging of transcript fetch response to console and Grafana (v1.0.7)
 // - INSERTED: console.log and transcript snippet log after successful fetch in /fetch-transcript (v1.0.7)
@@ -34,13 +36,17 @@ export default {
 
         const title = typeof metadata === "string" ? metadata : metadata.title || "Untitled";
 
-        const revPayload = {
-          media_url,
-          metadata: title,
-          name: title,
-          callback_url,
-          custom_vocabulary_id: "cvyeFz2ApdhD4nVfoW"
-        };
+const revPayload = {
+  media_url,
+  metadata: title,
+  name: title,
+  callback_url,
+  custom_vocabulary_id: "cvjFZZkyCf3NryGNlL",
+  custom_vocabulary_parameters: {
+    strict: true
+  }
+};
+
 
         const revResponse = await fetch("https://api.rev.ai/speechtotext/v1/jobs", {
           method: "POST",
